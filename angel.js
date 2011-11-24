@@ -98,7 +98,12 @@ function startServer (server, options) {
         });
         process.on( 'exit', function() {
             log( "master will exit" );
+
             deletePIDFile( options.pidfile );
+
+            eachWorkers( workers, function(worker) {
+                worker.kill();
+            });
         });
 
         log( "master will fork "+options.workers+" workers" );
