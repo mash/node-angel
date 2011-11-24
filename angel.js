@@ -31,6 +31,27 @@ function eachWorkers(workers, cb) {
         cb( worker );
     });
 }
+// returns true on success, false when require fails
+function reloadModules (regexp) {
+    var reloading_modules = [];
+    Object.keys( require.cache ).map( function(cache_keys) {
+        if ( cache_keys.match( regexp ) ) {
+            reloading_modules.push( cache_keys );
+        }
+    });
+    var ret = true;
+    reloading_modules.forEach( function(reloading_module) {
+        try {
+            delete require.cache[ reloading_module ];
+            require( reloading_module );
+            log( "reloaded " + reloading_module );
+        } catch (e) {
+            log( "reloading: " + reloading_module + " failed error: ", e );
+            ret = false;
+        }
+    });
+    return ret;
+}
 function startServer (server, options) {
     if ( cluster.isMaster ) {
         var workers   = {};
@@ -49,13 +70,23 @@ function startServer (server, options) {
         process.on( 'SIGHUP', function() {
             log( 'SIGHUP' );
 
-            // graceful restart
-            eachWorkers( workers, function(worker) {
-                worker.send({ cmd: 'close' });
-                var new_worker = cluster.fork();
-                workers[ worker.pid ] = new_worker;
-                log( "forked worker["+new_worker.pid+"]" );
-            });
+            var willrestart = true;
+            if ( options.refresh_modules_regexp ) {
+                willrestart = reloadModules( options.refresh_modules_regexp );
+            }
+
+            if ( willrestart ) {
+                // graceful restart
+                eachWorkers( workers, function(worker) {
+                    worker.send({ cmd: 'close' });
+                    var new_worker = cluster.fork();
+                    workers[ new_worker.pid ] = new_worker;
+                    log( "forked worker["+new_worker.pid+"]" );
+                });
+            }
+            else {
+                log( "reloading modules failed, wont run graceful restart" );
+            }
         });
         process.on( 'exit', function() {
             log( "master will exit" );
@@ -105,7 +136,8 @@ function angel (server, options_) {
     var options = {
         port: 3000,
         workers: numCPUs,
-        pidfile: 'angel.pid'
+        pidfile: 'angel.pid',
+        refresh_modules_regexp: false
     };
 
     // merge options_ into default options

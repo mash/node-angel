@@ -11,7 +11,7 @@ be careful, beta quality yet
 
 ## Example
 
-app.js:
+eg/app.js:
 
 ```javascript
 var http = require('http');
@@ -26,16 +26,17 @@ var server = http.Server(function(req, res) {
 module.exports = server;
 ```
 
-server.js:
+eg/server.js:
 
 ```javascript
-var angel = require('./angel')
+var angel = require('../angel')
 , app     = require('./app');
 
 angel( app, {
     port: 3000,
     workers: 4,
-    pidfile: 'angel.pid'
+    pidfile: 'angel.pid',
+    refresh_modules_regexp: 'eg/app\\.js$' // match agains require.cache keys
 });
 ```
 
@@ -49,14 +50,14 @@ master[3367] forked worker[3368]
 master[3367] forked worker[3369]
 master[3367] forked worker[3370]
 master[3367] forked worker[3371]
-worker[3368] worker[3368] launched
-worker[3368] worker[3368] listening on 3000
-worker[3371] worker[3371] launched
-worker[3370] worker[3370] launched
-worker[3371] worker[3371] listening on 3000
-worker[3370] worker[3370] listening on 3000
-worker[3369] worker[3369] launched
-worker[3369] worker[3369] listening on 3000
+worker[3368] launched
+worker[3368] listening on 3000
+worker[3371] launched
+worker[3370] launched
+worker[3371] listening on 3000
+worker[3370] listening on 3000
+worker[3369] launched
+worker[3369] listening on 3000
 ```
 
 to graceful restart:
@@ -65,10 +66,34 @@ to graceful restart:
 kill -HUP `cat angel.pid`
 ```
 
+after HUP you'll have stdout:
+```bash
+master[6304] SIGHUP
+master[6304] reloaded /path/to/eg/app.js
+worker[6305] closes
+master[6304] forked worker[6311]
+worker[6306] closes
+master[6304] forked worker[6312]
+worker[6307] closes
+master[6304] forked worker[6313]
+worker[6308] closes
+master[6304] forked worker[6314]
+master[6304] worker 6308 died
+master[6304] worker 6307 died
+master[6304] worker 6306 died
+master[6304] worker 6305 died
+worker[6311] launched
+worker[6311] listening on 3000
+worker[6314] launched
+worker[6312] launched
+worker[6314] listening on 3000
+worker[6312] listening on 3000
+worker[6313] launched
+worker[6313] listening on 3000
+```
 
 ## TODO
 
- * clean require.cache before respawn
  * limit max requests per process and suicide worker
  * merge pull requests :-)
 
