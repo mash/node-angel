@@ -67,6 +67,7 @@ kill -HUP `cat angel.pid`
 ```
 
 after HUP you'll have stdout:
+
 ```bash
 master[6304] SIGHUP
 master[6304] reloaded /path/to/eg/app.js
