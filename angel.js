@@ -87,7 +87,9 @@ function startServer (server, options) {
                     workers[ new_worker.pid ] = new_worker;
                     log( "forked worker["+new_worker.pid+"]" );
 
-                    worker.send({ cmd: 'close' });
+                    setTimeout( function() {
+                        worker.send({ cmd: 'close' });
+                    }, options.interval * 1000 );
                 });
             }
             else {
@@ -127,7 +129,6 @@ function startServer (server, options) {
         process.on( 'message', function(m) {
             switch (m.cmd) {
             case "close":
-                log( "will close" );
                 server.close();
                 break;
             default:
@@ -144,7 +145,8 @@ function angel (server, options_) {
         port: 3000,
         workers: numCPUs,
         pidfile: 'angel.pid',
-        refresh_modules_regexp: false
+        refresh_modules_regexp: false,
+        interval: 1
     };
 
     // merge options_ into default options

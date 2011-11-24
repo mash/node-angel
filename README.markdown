@@ -7,6 +7,7 @@ be careful, beta quality yet
 ## Features
 
  * SIGHUP and graceful restart
+ * refresh modules, and graceful restart only if refresh succeeds
 
 
 ## Example
@@ -36,28 +37,29 @@ angel( app, {
     port: 3000,
     workers: 4,
     pidfile: 'angel.pid',
-    refresh_modules_regexp: 'eg/app\\.js$' // match agains require.cache keys
+    refresh_modules_regexp: 'eg/app\\.js$',    // match against require.cache keys
+    interval: 1    // between new workers' start and old workers' close, in seconds
 });
 ```
 
 will output something like:
 
 ```bash
-athens% node server.js
-master[3367] created pid_file: angel.pid
-master[3367] master will fork 4 workers
-master[3367] forked worker[3368]
-master[3367] forked worker[3369]
-master[3367] forked worker[3370]
-master[3367] forked worker[3371]
-worker[3368] launched
-worker[3368] listening on 3000
-worker[3371] launched
-worker[3370] launched
-worker[3371] listening on 3000
-worker[3370] listening on 3000
-worker[3369] launched
-worker[3369] listening on 3000
+% node eg/server.js
+master[20363] created pid_file: angel.pid
+master[20363] master will fork 4 workers
+master[20363] forked worker[20364]
+master[20363] forked worker[20365]
+master[20363] forked worker[20366]
+master[20363] forked worker[20367]
+worker[20365] launched
+worker[20365] listening on 3000
+worker[20364] launched
+worker[20364] listening on 3000
+worker[20366] launched
+worker[20366] listening on 3000
+worker[20367] launched
+worker[20367] listening on 3000
 ```
 
 to graceful restart:
@@ -69,32 +71,33 @@ kill -HUP `cat angel.pid`
 after HUP you'll have stdout:
 
 ```bash
-master[6304] SIGHUP
-master[6304] reloaded /path/to/eg/app.js
-worker[6305] closes
-master[6304] forked worker[6311]
-worker[6306] closes
-master[6304] forked worker[6312]
-worker[6307] closes
-master[6304] forked worker[6313]
-worker[6308] closes
-master[6304] forked worker[6314]
-master[6304] worker 6308 died
-master[6304] worker 6307 died
-master[6304] worker 6306 died
-master[6304] worker 6305 died
-worker[6311] launched
-worker[6311] listening on 3000
-worker[6314] launched
-worker[6312] launched
-worker[6314] listening on 3000
-worker[6312] listening on 3000
-worker[6313] launched
-worker[6313] listening on 3000
+master[20363] SIGHUP
+master[20363] reloaded /path/to/eg/app.js
+master[20363] forked worker[20370]
+master[20363] forked worker[20371]
+master[20363] forked worker[20372]
+master[20363] forked worker[20373]
+worker[20372] launched
+worker[20370] launched
+worker[20372] listening on 3000
+worker[20370] listening on 3000
+worker[20371] launched
+worker[20371] listening on 3000
+worker[20373] launched
+worker[20373] listening on 3000
+worker[20364] closes
+worker[20365] closes
+master[20363] worker 20364 died
+master[20363] worker 20365 died
+worker[20366] closes
+master[20363] worker 20366 died
+worker[20367] closes
+master[20363] worker 20367 died
 ```
 
 ## TODO
 
+ * tests
  * limit max requests per process and suicide worker
  * merge pull requests :-)
 
