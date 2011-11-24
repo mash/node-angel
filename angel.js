@@ -3,24 +3,6 @@ var fs     = require('fs')
 , numCPUs  = require('os').cpus().length
 ;
 
-module.exports = angel;
-
-function angel (server, options_) {
-
-    var options = {
-        port: 3000,
-        workers: numCPUs,
-        pidfile: 'angel.pid'
-    };
-
-    // merge options_ into default options
-    Object.keys( options_ ).map( function(key) {
-        options[ key ] = options_[ key ];
-    });
-
-    startServer( server, options );
-}
-
 function log() {
     var args = Array.prototype.slice.call(arguments);
     if ( cluster.isMaster ) {
@@ -70,9 +52,9 @@ function startServer (server, options) {
             // graceful restart
             eachWorkers( workers, function(worker) {
                 worker.send({ cmd: 'close' });
-                var worker = cluster.fork();
-                workers[ worker.pid ] = worker;
-                log( "forked worker["+worker.pid+"]" );
+                var new_worker = cluster.fork();
+                workers[ worker.pid ] = new_worker;
+                log( "forked worker["+new_worker.pid+"]" );
             });
         });
         process.on( 'exit', function() {
@@ -117,3 +99,21 @@ function startServer (server, options) {
         });
     }
 }
+
+function angel (server, options_) {
+
+    var options = {
+        port: 3000,
+        workers: numCPUs,
+        pidfile: 'angel.pid'
+    };
+
+    // merge options_ into default options
+    Object.keys( options_ ).map( function(key) {
+        options[ key ] = options_[ key ];
+    });
+
+    startServer( server, options );
+}
+
+module.exports = angel;
