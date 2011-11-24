@@ -61,7 +61,7 @@ function startServer (server, options) {
     if ( cluster.isMaster ) {
         var workers   = {};
 
-        // server_starter.pid
+        // defaults to angel.pid
         createPIDFile( options.pidfile );
 
         process.on( 'SIGINT', function() {
@@ -123,7 +123,7 @@ function startServer (server, options) {
             process.exit(0);
         });
         server.listen( options.port, function() {
-            log( "listening on "+options.port );
+            log( "listening on "+server.address().port );
         });
 
         process.on( 'message', function(m) {
