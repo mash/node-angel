@@ -40,9 +40,14 @@ function reloadModules (regexp) {
         }
     });
     var ret = true;
+
+    // delete all matched modules from cache at once
+    // and load them afterwards for consistency
+    reloading_modules.forEach( function(reloading_module) {
+        delete require.cache[ reloading_module ];
+    });
     reloading_modules.forEach( function(reloading_module) {
         try {
-            delete require.cache[ reloading_module ];
             require( reloading_module );
             log( "reloaded " + reloading_module );
         } catch (e) {
