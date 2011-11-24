@@ -77,14 +77,14 @@ function startServer (server, options) {
         }
     }
     else {
-        log( "worker["+process.pid+"] launched" );
+        log( "launched" );
 
         server.on( 'close', function() {
-            log( "worker["+process.pid+"] closes" );
+            log( "closes" );
             process.exit(0);
         });
         server.listen( options.port, function() {
-            log( "worker["+process.pid+"] listening on "+options.port );
+            log( "listening on "+options.port );
         });
 
         process.on( 'message', function(m) {
