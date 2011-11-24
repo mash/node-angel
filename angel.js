@@ -83,10 +83,11 @@ function startServer (server, options) {
             if ( willrestart ) {
                 // graceful restart
                 eachWorkers( workers, function(worker) {
-                    worker.send({ cmd: 'close' });
                     var new_worker = cluster.fork();
                     workers[ new_worker.pid ] = new_worker;
                     log( "forked worker["+new_worker.pid+"]" );
+
+                    worker.send({ cmd: 'close' });
                 });
             }
             else {
@@ -126,6 +127,7 @@ function startServer (server, options) {
         process.on( 'message', function(m) {
             switch (m.cmd) {
             case "close":
+                log( "will close" );
                 server.close();
                 break;
             default:
