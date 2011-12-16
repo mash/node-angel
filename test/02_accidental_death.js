@@ -3,7 +3,7 @@ assert  = require('assert'),
 http    = require('http'),
 cluster = require('cluster'),
 angel   = require('../angel'),
-app     = require('./_app.js');
+app     = require('./_suicide_app.js');
 
 // this will be our test app's response body
 var expected_body = process.env.NODE_ANGEL_TEST_MESSAGE = "Hello";
@@ -13,11 +13,11 @@ var test_port = 3000;
 angel( app, {
     port: test_port, // mmm, test requires port 3000 to be open
     workers: 1,
-    refresh_modules_regexp: "/_app\\.js$"
+    refresh_modules_regexp: "/_suicide_app\\.js$"
 } );
 
 function sendRequest( callback ) {
-    http.get({
+    var req = http.request({
         host: 'localhost',
         port: test_port,
         path: '/'
@@ -27,13 +27,21 @@ function sendRequest( callback ) {
             body += chunk;
         });
         res.on('end', function() {
-            callback( body );
+            callback( res, body );
         });
     });
+    req.setTimeout( 300, function() {
+        assert( 0, "timeout, worker doesnt respond" );
+        process.exit(0);
+    });
+    req.end();
 }
 
 function runTest () {
-    sendRequest( function(body) {
+    // console.log( "master requests app" );
+    sendRequest( function(res, body) {
+        assert( res.statusCode === 200 );
+
         var body_and_pid = body.split(':');
         // console.log("body_and_pid: ",body_and_pid);
 
@@ -44,24 +52,24 @@ function runTest () {
 
         expected_body = process.env.NODE_ANGEL_TEST_MESSAGE = "World";
 
-        // trigger graceful restart
-        process.kill( process.pid, 'SIGHUP' );
-
-        // wait til worker restarts
+        // wait til worker restarts after suicide
         setTimeout( function() {
-            sendRequest( function(body2) {
+            // console.log( "master requests app again" );
+            sendRequest( function(res2, body2) {
+                assert( res2.statusCode === 200 );
+
                 var body_and_pid2 = body2.split(':');
                 // console.log( "body_and_pid2[ 0 ]: ",body_and_pid2);
 
                 assert( body_and_pid2[ 0 ] === expected_body, 'response body ok after module refreshed' );
-                assert( body_and_pid2[ 1 ] !== worker_pid, 'worker pid changed' );
-                assert( body_and_pid2[ 1 ] !== process.pid, 'respawned worker pid is not same as angel' );
+                assert( body_and_pid2[ 1 ] !== worker_pid,    'worker pid changed' );
+                assert( body_and_pid2[ 1 ] !== process.pid,   'respawned worker pid is not same as angel' );
 
                 console.log( 'Result: PASS' );
 
                 process.exit(0);
             });
-        }, 1100 );
+        }, 500 );
     });
 }
 

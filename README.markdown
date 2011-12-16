@@ -8,6 +8,7 @@ be careful, beta quality yet
 
  * SIGHUP and graceful restart
  * refresh modules, and graceful restart only if refresh succeeds
+ * fork a new worker on accidental death
 
 
 ## Example

@@ -87,6 +87,7 @@ function startServer (server, options) {
                     workers[ new_worker.pid ] = new_worker;
                     log( "forked worker["+new_worker.pid+"]" );
 
+                    worker.is_rising = 1; // going to die gracefully
                     setTimeout( function() {
                         worker.send({ cmd: 'close' });
                     }, options.interval * 1000 );
@@ -109,7 +110,17 @@ function startServer (server, options) {
         log( "master will fork "+options.workers+" workers" );
 
         cluster.on( 'death', function(worker) {
-            log('worker ' + worker.pid + ' died');
+            if ( worker.is_rising ) {
+                // graceful restart killed worker
+                log( 'worker ' + worker.pid + ' died' );
+            }
+            else {
+                // accidental death
+                log( 'worker ' + worker.pid + ' died unexpectedly, restarting' );
+                var new_worker = cluster.fork();
+                workers[ new_worker.pid ] = new_worker;
+                log( 'forked worker[' + new_worker.pid + ']' );
+            }
             delete workers[ worker.pid ];
         });
 
