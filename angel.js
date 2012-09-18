@@ -57,6 +57,23 @@ function reloadModules (regexp) {
     });
     return ret;
 }
+function spawnWorker (workers) {
+    var new_worker = cluster.fork();
+    workers[ new_worker.pid ] = new_worker;
+
+    log( "forked worker["+new_worker.pid+"]" );
+
+    new_worker.on( 'message', function (m) {
+        switch (m.cmd) {
+        case "set":
+            new_worker[ m.key ] = m.value;
+            break;
+        default:
+            break;
+        }
+    });
+    return new_worker;
+}
 function startServer (server, options) {
     if ( cluster.isMaster ) {
         var workers   = {};
@@ -83,9 +100,7 @@ function startServer (server, options) {
             if ( willrestart ) {
                 // graceful restart
                 eachWorkers( workers, function(worker) {
-                    var new_worker = cluster.fork();
-                    workers[ new_worker.pid ] = new_worker;
-                    log( "forked worker["+new_worker.pid+"]" );
+                    var new_worker = spawnWorker( workers );
 
                     worker.is_rising = 1; // going to die gracefully
                     setTimeout( function() {
@@ -112,23 +127,24 @@ function startServer (server, options) {
         cluster.on( 'death', function(worker) {
             if ( worker.is_rising ) {
                 // graceful restart killed worker
-                log( 'worker ' + worker.pid + ' died' );
+                log( 'worker[' + worker.pid + '] died' );
             }
             else {
-                // accidental death
-                log( 'worker ' + worker.pid + ' died unexpectedly, restarting' );
-                var new_worker = cluster.fork();
-                workers[ new_worker.pid ] = new_worker;
-                log( 'forked worker[' + new_worker.pid + ']' );
+                if ( worker.overMaxRequests ) {
+                    log( 'worker[' + worker.pid + '] processed ' + options.max_requests_per_child + ' requests and died successfully' );
+                }
+                else {
+                    // accidental death
+                    log( 'worker[' + worker.pid + '] died unexpectedly, restarting' );
+                }
+                spawnWorker( workers );
             }
             delete workers[ worker.pid ];
         });
 
         var i;
         for (i=0; i<options.workers; i++ ) {
-            var worker = cluster.fork();
-            workers[ worker.pid ] = worker;
-            log( "forked worker["+worker.pid+"]" );
+            spawnWorker( workers );
         }
     }
     else {
@@ -137,6 +153,14 @@ function startServer (server, options) {
         server.on( 'close', function() {
             log( "closes" );
             process.exit(0);
+        });
+        var requestCount = 0;
+        server.on( 'request', function () {
+            requestCount ++;
+            if ( options.max_requests_per_child && (requestCount >= options.max_requests_per_child) ) {
+                process.send({ cmd: 'set', key: "overMaxRequests", value: 1 });
+                server.close();
+            }
         });
         server.listen( options.port, function() {
             log( "listening on "+server.address().port );
@@ -162,7 +186,8 @@ function angel (server, options_) {
         workers: numCPUs,
         pidfile: 'angel.pid',
         refresh_modules_regexp: false,
-        interval: 1
+        interval: 1,
+        max_requests_per_child: 0
     };
 
     // merge options_ into default options

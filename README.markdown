@@ -9,6 +9,7 @@ be careful, beta quality yet
  * SIGHUP and graceful restart
  * refresh modules, and graceful restart only if refresh succeeds
  * fork a new worker on accidental death
+ * max_requests_per_child
 
 
 ## Example
@@ -39,7 +40,8 @@ angel( app, {
     workers: 4,
     pidfile: 'angel.pid',
     refresh_modules_regexp: 'eg/app\\.js$',    // match against require.cache keys
-    interval: 1    // between new workers' start and old workers' close, in seconds
+    interval: 1,    // between new workers' start and old workers' close, in seconds
+    max_requests_per_child: 1000 // worker dies and a new worker spawns after processing x number of requests
 });
 ```
 
@@ -99,7 +101,6 @@ master[20363] worker 20367 died
 ## TODO
 
  * tests
- * limit max requests per process and suicide worker
  * merge pull requests :-)
 
 
