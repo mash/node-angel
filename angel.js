@@ -159,7 +159,10 @@ function startServer (server, options) {
             requestCount ++;
             if ( options.max_requests_per_child && (requestCount >= options.max_requests_per_child) ) {
                 process.send({ cmd: 'set', key: "overMaxRequests", value: 1 });
-                server.close();
+                if ( ! server.isClosed ) {
+                    server.close();
+                    server.isClosed = 1;
+                }
             }
         });
         server.listen( options.port, function() {
