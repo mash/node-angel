@@ -75,9 +75,12 @@ function spawnWorker (workers) {
     return new_worker;
 }
 function startServer (server, options) {
-    var workers   = {}
-    ,   i = 0
-    ,   requestCount = 0;
+    var workers      = {}
+    ,   i            = 0
+    ,   requestCount = 0
+    ,   listenArgs   = []
+    ;
+
     if ( cluster.isMaster ) {
 
         // defaults to angel.pid
@@ -165,9 +168,20 @@ function startServer (server, options) {
                 }
             }
         });
-        server.listen( options.port, function() {
-            log( "listening on "+server.address().port );
+        if ( options.port ) {
+            listenArgs.push( options.port );
+            if ( options.host ) {
+                listenArgs.push( options.host );
+            }
+        }
+        else if ( options.path ) {
+            listenArgs.push( options.path );
+        }
+        listenArgs.push( function() {
+            log( "listening on "+ ( options.port ? server.address().port : options.path ) );
         });
+
+        server.listen.apply( server, listenArgs );
 
         process.on( 'message', function(m) {
             switch (m.cmd) {
@@ -183,9 +197,11 @@ function startServer (server, options) {
 }
 
 function angel (server, options_) {
+    if ( ! options_.port && ! options_.path ) {
+        throw "angel requires port or path option";
+    }
 
     var options = {
-        port                   : 3000,
         workers                : numCPUs,
         pidfile                : 'angel.pid',
         refresh_modules_regexp : false,

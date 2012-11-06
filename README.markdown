@@ -36,12 +36,12 @@ var angel = require('../angel')
 , app     = require('./app');
 
 angel( app, {
-    port: 3000,
+    port: 3000,                              // or unix domain socket. path: "/tmp/socket"
     workers: 4,
     pidfile: 'angel.pid',
-    refresh_modules_regexp: 'eg/app\\.js$',    // match against require.cache keys
-    interval: 1,    // between new workers' start and old workers' close, in seconds
-    max_requests_per_child: 1000 // worker dies and a new worker spawns after processing x number of requests
+    refresh_modules_regexp: 'eg/app\\.js$',  // match against require.cache keys
+    interval: 1,                             // between new workers' start and old workers' close, in seconds
+    max_requests_per_child: 1000             // worker dies and a new worker spawns after processing x number of requests
 });
 ```
 
