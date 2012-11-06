@@ -34,12 +34,12 @@ function sendRequest( callback ) {
 
 function runTest () {
     sendRequest( function(body) {
-        var body_and_pid = body.split(':');
+        var body_and_pid = body.split(':')
+        , worker_pid     = body_and_pid[ 1 ]
+        ;
         // console.log("body_and_pid: ",body_and_pid);
 
         assert( body_and_pid[ 0 ] === expected_body, 'response body ok' );
-
-        var worker_pid = body_and_pid[ 1 ];
         assert( worker_pid !== process.pid, 'angel pid and worker pid is different' );
 
         expected_body = process.env.NODE_ANGEL_TEST_MESSAGE = "World";

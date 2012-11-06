@@ -33,13 +33,13 @@ function eachWorkers(workers, cb) {
 }
 // returns true on success, false when require fails
 function reloadModules (regexp) {
-    var reloading_modules = [];
+    var reloading_modules = []
+    ,   ret = true;
     Object.keys( require.cache ).map( function(cache_keys) {
         if ( cache_keys.match( regexp ) ) {
             reloading_modules.push( cache_keys );
         }
     });
-    var ret = true;
 
     // delete all matched modules from cache at once
     // and load them afterwards for consistency
@@ -75,8 +75,10 @@ function spawnWorker (workers) {
     return new_worker;
 }
 function startServer (server, options) {
+    var workers   = {}
+    ,   i = 0
+    ,   requestCount = 0;
     if ( cluster.isMaster ) {
-        var workers   = {};
 
         // defaults to angel.pid
         createPIDFile( options.pidfile );
@@ -142,8 +144,7 @@ function startServer (server, options) {
             delete workers[ worker.pid ];
         });
 
-        var i;
-        for (i=0; i<options.workers; i++ ) {
+        for (i=0; i<options.workers; i+=1 ) {
             spawnWorker( workers );
         }
     }
@@ -154,9 +155,8 @@ function startServer (server, options) {
             log( "closes" );
             process.exit(0);
         });
-        var requestCount = 0;
         server.on( 'request', function () {
-            requestCount ++;
+            requestCount += 1;
             if ( options.max_requests_per_child && (requestCount >= options.max_requests_per_child) ) {
                 process.send({ cmd: 'set', key: "overMaxRequests", value: 1 });
                 if ( ! server.isClosed ) {
@@ -185,12 +185,12 @@ function startServer (server, options) {
 function angel (server, options_) {
 
     var options = {
-        port: 3000,
-        workers: numCPUs,
-        pidfile: 'angel.pid',
-        refresh_modules_regexp: false,
-        interval: 1,
-        max_requests_per_child: 0
+        port                   : 3000,
+        workers                : numCPUs,
+        pidfile                : 'angel.pid',
+        refresh_modules_regexp : false,
+        interval               : 1,
+        max_requests_per_child : 0
     };
 
     // merge options_ into default options
