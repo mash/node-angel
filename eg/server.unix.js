@@ -1,22 +1,28 @@
 var angel = require('../angel')
 , app     = require('./app')
+, fs      = require('fs')
 , oldmask
 , newmask = 0
+, socket  = "/var/tmp/angel.eg.socket"
+, cluster = require('cluster')
 ;
 
 // run
 // $ node eg/server.unix.js
 
-oldmask = process.umask(newmask);
-console.log('Changed umask from: ' + oldmask.toString(8) + ' to ' + newmask.toString(8));
-app.on( 'listening', function () {
-    process.umask(oldmask);
-});
+if ( cluster.isMaster ) {
+    oldmask = process.umask(newmask);
+    console.log('Changed umask from: ' + oldmask.toString(8) + ' to ' + newmask.toString(8));
+}
+
+if ( fs.existsSync( socket ) ) {
+    fs.unlinkSync( socket );
+}
 
 angel( app, {
-    path: "/var/tmp/angel.eg.socket",
-    workers: 4,
-    pidfile: 'angel.pid',
-    refresh_modules_regexp: 'eg/app\\.js$', // match agains require.cache keys
-    max_requests_per_child: 2
+    path                   : socket,
+    workers                : 4,
+    pidfile                : 'angel.pid',
+    refresh_modules_regexp : 'eg/app\\.js$', // match agains require.cache keys
+    max_requests_per_child : 2
 });
