@@ -1,6 +1,7 @@
 var fs     = require('fs')
 , cluster  = require('cluster')
 , numCPUs  = require('os').cpus().length
+, isNode06 = process.version.match( /v0\.6/ )
 ;
 
 function log() {
@@ -57,9 +58,12 @@ function reloadModules (regexp) {
     });
     return ret;
 }
-function spawnWorker (workers) {
-    var new_worker = cluster.fork();
-    workers[ new_worker.pid ] = new_worker;
+function spawnWorker (options) {
+    var new_worker            = cluster.fork();
+    new_worker.angelOptions   = options;
+    if ( ! new_worker.pid ) {
+        new_worker.pid        = new_worker.process.pid;
+    }
 
     log( "forked worker["+new_worker.pid+"]" );
 
@@ -74,11 +78,30 @@ function spawnWorker (workers) {
     });
     return new_worker;
 }
+function onWorkerDeath (worker, workers) {
+    if ( worker.is_rising ) {
+        // graceful restart killed worker
+        log( 'worker[' + worker.pid + '] died' );
+    }
+    else {
+        if ( worker.overMaxRequests ) {
+            log( 'worker[' + worker.pid + '] processed ' + worker.angelOptions.max_requests_per_child + ' requests and died successfully' );
+        }
+        else {
+            // accidental death
+            log( 'worker[' + worker.pid + '] died unexpectedly, restarting' );
+        }
+        var new_worker            = spawnWorker( worker.angelOptions );
+        workers[ new_worker.pid ] = new_worker;
+    }
+    delete workers[ worker.pid ];
+}
 function startServer (server, options) {
     var workers      = {}
     ,   i            = 0
     ,   requestCount = 0
     ,   listenArgs   = []
+    ,   new_worker
     ;
 
     if ( cluster.isMaster ) {
@@ -105,9 +128,10 @@ function startServer (server, options) {
             if ( willrestart ) {
                 // graceful restart
                 eachWorkers( workers, function(worker) {
-                    var new_worker = spawnWorker( workers );
+                    var new_worker            = spawnWorker( options );
+                    workers[ new_worker.pid ] = new_worker;
 
-                    worker.is_rising = 1; // going to die gracefully
+                    worker.is_rising          = 1; // going to die gracefully
                     setTimeout( function() {
                         worker.send({ cmd: 'close' });
                     }, options.interval * 1000 );
@@ -123,32 +147,29 @@ function startServer (server, options) {
             deletePIDFile( options.pidfile );
 
             eachWorkers( workers, function(worker) {
-                worker.kill();
+                if ( isNode06 ) {
+                    worker.kill();
+                }
+                else {
+                    worker.destroy();
+                }
             });
         });
 
         log( "master will fork "+options.workers+" workers" );
 
-        cluster.on( 'death', function(worker) {
-            if ( worker.is_rising ) {
-                // graceful restart killed worker
-                log( 'worker[' + worker.pid + '] died' );
-            }
-            else {
-                if ( worker.overMaxRequests ) {
-                    log( 'worker[' + worker.pid + '] processed ' + options.max_requests_per_child + ' requests and died successfully' );
-                }
-                else {
-                    // accidental death
-                    log( 'worker[' + worker.pid + '] died unexpectedly, restarting' );
-                }
-                spawnWorker( workers );
-            }
-            delete workers[ worker.pid ];
+        cluster.on( 'death', function (worker) {
+            // for v0.6
+            onWorkerDeath( worker, workers );
+        });
+        cluster.on( 'exit',  function (worker) {
+            // for v0.8
+            onWorkerDeath( worker, workers );
         });
 
         for (i=0; i<options.workers; i+=1 ) {
-            spawnWorker( workers );
+            new_worker                = spawnWorker( options );
+            workers[ new_worker.pid ] = new_worker;
         }
     }
     else {

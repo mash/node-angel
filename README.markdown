@@ -1,7 +1,6 @@
 # angel.js
 
-angel.js is a simple library to gracefully restart multi process net.Servers on node >= 0.6
-be careful, beta quality yet
+angel.js is a simple library to gracefully restart multi process net.Servers on node >= 0.6, 0.8
 
 
 ## Features
@@ -100,7 +99,6 @@ master[20363] worker 20367 died
 
 ## TODO
 
- * tests
  * merge pull requests :-)
 
 
