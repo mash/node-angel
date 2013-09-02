@@ -199,7 +199,8 @@ function startServer (server, options) {
             listenArgs.push( options.path );
         }
         listenArgs.push( function() {
-            log( "listening on "+ ( options.port ? server.address().port : options.path ) );
+            log( "listening on "+ ( (typeof options.port !== "undefined") ? server.address().port
+                                                                          : options.path ) );
         });
 
         server.listen.apply( server, listenArgs );
@@ -218,7 +219,8 @@ function startServer (server, options) {
 }
 
 function angel (server, options_) {
-    if ( ! options_.port && ! options_.path ) {
+    if ( (typeof options_.port === 'undefined') &&
+         (typeof options_.path === 'undefined') ) {
         throw "angel requires port or path option";
     }
 
