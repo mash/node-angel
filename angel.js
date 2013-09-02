@@ -1,6 +1,6 @@
-var fs     = require('fs')
-, cluster  = require('cluster')
-, numCPUs  = require('os').cpus().length
+var fs     = require("fs")
+, cluster  = require("cluster")
+, numCPUs  = require("os").cpus().length
 , isNode06 = process.version.match( /v0\.6/ )
 ;
 
@@ -67,7 +67,7 @@ function spawnWorker (options) {
 
     log( "forked worker["+new_worker.pid+"]" );
 
-    new_worker.on( 'message', function (m) {
+    new_worker.on( "message", function (m) {
         switch (m.cmd) {
         case "set":
             new_worker[ m.key ] = m.value;
@@ -81,15 +81,15 @@ function spawnWorker (options) {
 function onWorkerDeath (worker, workers) {
     if ( worker.is_rising ) {
         // graceful restart killed worker
-        log( 'worker[' + worker.pid + '] died' );
+        log( "worker[" + worker.pid + "] died" );
     }
     else {
         if ( worker.overMaxRequests ) {
-            log( 'worker[' + worker.pid + '] processed ' + worker.angelOptions.max_requests_per_child + ' requests and died successfully' );
+            log( "worker[" + worker.pid + "] processed " + worker.angelOptions.max_requests_per_child + " requests and died successfully" );
         }
         else {
             // accidental death
-            log( 'worker[' + worker.pid + '] died unexpectedly, restarting' );
+            log( "worker[" + worker.pid + "] died unexpectedly, restarting" );
         }
         var new_worker            = spawnWorker( worker.angelOptions );
         workers[ new_worker.pid ] = new_worker;
@@ -109,16 +109,16 @@ function startServer (server, options) {
         // defaults to angel.pid
         createPIDFile( options.pidfile );
 
-        process.on( 'SIGINT', function() {
-            log( 'SIGINT' );
+        process.on( "SIGINT", function() {
+            log( "SIGINT" );
             process.exit( 0 ); // run exit event listener
         });
-        process.on( 'SIGTERM', function() {
-            log( 'SIGTERM' );
+        process.on( "SIGTERM", function() {
+            log( "SIGTERM" );
             process.exit( 0 ); // run exit event listener
         });
-        process.on( 'SIGHUP', function() {
-            log( 'SIGHUP' );
+        process.on( "SIGHUP", function() {
+            log( "SIGHUP" );
 
             var willrestart = true;
             if ( options.refresh_modules_regexp ) {
@@ -133,7 +133,7 @@ function startServer (server, options) {
 
                     worker.is_rising          = 1; // going to die gracefully
                     setTimeout( function() {
-                        worker.send({ cmd: 'close' });
+                        worker.send({ cmd: "close" });
                     }, options.interval * 1000 );
                 });
             }
@@ -141,7 +141,7 @@ function startServer (server, options) {
                 log( "reloading modules failed, wont run graceful restart" );
             }
         });
-        process.on( 'exit', function() {
+        process.on( "exit", function() {
             log( "master will exit" );
 
             deletePIDFile( options.pidfile );
@@ -158,11 +158,11 @@ function startServer (server, options) {
 
         log( "master will fork "+options.workers+" workers" );
 
-        cluster.on( 'death', function (worker) {
+        cluster.on( "death", function (worker) {
             // for v0.6
             onWorkerDeath( worker, workers );
         });
-        cluster.on( 'exit',  function (worker) {
+        cluster.on( "exit",  function (worker) {
             // for v0.8
             onWorkerDeath( worker, workers );
         });
@@ -175,14 +175,14 @@ function startServer (server, options) {
     else {
         log( "launched" );
 
-        server.on( 'close', function() {
+        server.on( "close", function() {
             log( "closes" );
             process.exit(0);
         });
-        server.on( 'request', function () {
+        server.on( "request", function () {
             requestCount += 1;
             if ( options.max_requests_per_child && (requestCount >= options.max_requests_per_child) ) {
-                process.send({ cmd: 'set', key: "overMaxRequests", value: 1 });
+                process.send({ cmd: "set", key: "overMaxRequests", value: 1 });
                 if ( ! server.isClosed ) {
                     server.close();
                     server.isClosed = 1;
@@ -205,7 +205,7 @@ function startServer (server, options) {
 
         server.listen.apply( server, listenArgs );
 
-        process.on( 'message', function(m) {
+        process.on( "message", function(m) {
             switch (m.cmd) {
             case "close":
                 server.close();
@@ -219,14 +219,14 @@ function startServer (server, options) {
 }
 
 function angel (server, options_) {
-    if ( (typeof options_.port === 'undefined') &&
-         (typeof options_.path === 'undefined') ) {
+    if ( (typeof options_.port === "undefined") &&
+         (typeof options_.path === "undefined") ) {
         throw "angel requires port or path option";
     }
 
     var options = {
         workers                : numCPUs,
-        pidfile                : 'angel.pid',
+        pidfile                : "angel.pid",
         refresh_modules_regexp : false,
         interval               : 1,
         max_requests_per_child : 0
