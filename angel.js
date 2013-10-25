@@ -198,7 +198,9 @@ function startServer (server, options) {
         else if ( options.path ) {
             listenArgs.push( options.path );
         }
+        server.isListening = false;
         listenArgs.push( function() {
+            server.isListening = true;
             log( "listening on "+ ( (typeof options.port !== "undefined") ? server.address().port
                                                                           : options.path ) );
         });
@@ -208,7 +210,12 @@ function startServer (server, options) {
         process.on( "message", function(m) {
             switch (m.cmd) {
             case "close":
-                server.close();
+                if (server.isListening) {
+                    server.close();
+                }
+                else {
+                    server.emit("close");
+                }
                 break;
             default:
                 // log( "worker["+process.pid+"] unsupported message: ",m);
