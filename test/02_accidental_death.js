@@ -8,18 +8,16 @@ app     = require('./_suicide_app.js');
 // this will be our test app's response body
 var expected_body = process.env.NODE_ANGEL_TEST_MESSAGE = "Hello";
 
-var test_port = 3000;
-
 angel( app, {
-    port: test_port, // mmm, test requires port 3000 to be open
-    workers: 1,
-    refresh_modules_regexp: "/_suicide_app\\.js$"
+    port                   : 0,
+    workers                : 1,
+    refresh_modules_regexp : "/_suicide_app\\.js$"
 } );
 
-function sendRequest( callback ) {
+function sendRequest( port, callback ) {
     var req = http.request({
         host: 'localhost',
-        port: test_port,
+        port: port,
         path: '/'
     }, function(res) {
         var body = '';
@@ -37,9 +35,9 @@ function sendRequest( callback ) {
     req.end();
 }
 
-function runTest () {
+function runTest (port) {
     // console.log( "master requests app" );
-    sendRequest( function(res, body) {
+    sendRequest( port, function(res, body) {
         assert( res.statusCode === 200 );
 
         var body_and_pid = body.split(':')
@@ -56,7 +54,7 @@ function runTest () {
         // wait til worker restarts after suicide
         setTimeout( function() {
             // console.log( "master requests app again" );
-            sendRequest( function(res2, body2) {
+            sendRequest( port, function(res2, body2) {
                 assert( res2.statusCode === 200 );
 
                 var body_and_pid2 = body2.split(':');
@@ -74,7 +72,16 @@ function runTest () {
     });
 }
 
+// worker tells master where the worker is listening on
+// master uses that port to request
 if ( cluster.isMaster ) {
-    // wait til listening
-    setTimeout( runTest, 100 );
+    Object.keys(cluster.workers).forEach( function(id) {
+        cluster.workers[id].on("message", function(m) {
+            switch (m.cmd) {
+            case "listening":
+                runTest( m.address.port );
+                break;
+            }
+        });
+    });
 }

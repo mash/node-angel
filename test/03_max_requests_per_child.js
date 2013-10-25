@@ -9,18 +9,16 @@ app     = require('./_app.js');
 // this will be our test app's response body
 var expected_body = process.env.NODE_ANGEL_TEST_MESSAGE = "Hello";
 
-var test_port = 3000;
-
 angel( app, {
-    port: test_port, // mmm, test requires port 3000 to be open
-    workers: 1,
-    max_requests_per_child: 2,
+    port                   : 0,
+    workers                : 1,
+    max_requests_per_child : 2,
 } );
 
-function sendRequest( callback ) {
+function sendRequest( port, callback ) {
     http.get({
         host: 'localhost',
-        port: test_port,
+        port: port,
         path: '/'
     }, function(res) {
         var body = '';
@@ -33,12 +31,12 @@ function sendRequest( callback ) {
     });
 }
 
-function runTest () {
+function runTest (port) {
     var jobs = []
     , requests_count = 10;
     while ( requests_count -- ) {
         jobs.push( function(callback) {
-            sendRequest( function(body) {
+            sendRequest( port, function(body) {
                 callback( null, body );
             });
         });
@@ -59,7 +57,16 @@ function runTest () {
     });
 }
 
+// worker tells master where the worker is listening on
+// master uses that port to request
 if ( cluster.isMaster ) {
-    // wait til listening
-    setTimeout( runTest, 100 );
+    Object.keys(cluster.workers).forEach( function(id) {
+        cluster.workers[id].on("message", function(m) {
+            switch (m.cmd) {
+            case "listening":
+                runTest( m.address.port );
+                break;
+            }
+        });
+    });
 }

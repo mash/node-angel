@@ -203,6 +203,9 @@ function startServer (server, options) {
             server.isListening = true;
             log( "listening on "+ ( (typeof options.port !== "undefined") ? server.address().port
                                                                           : options.path ) );
+
+            // tell master where we're listening (used in tests)
+            process.send({ cmd: "listening", address: server.address() });
         });
 
         server.listen.apply( server, listenArgs );
