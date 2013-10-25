@@ -1,11 +1,11 @@
 {
   "name"            : "angel",
-  "description"     : "superdaemon for hot-deploying http.Servers",
+  "description"     : "superdaemon for hot-deploying net.Servers",
   "keywords"        : ["graceful restart", "cluster", "signal", "fork", "max_requests_per_child"],
   "version"         : "0.2.0",
   "repository"      : {
     "type"  : "git",
-    "url"   : "git://github.com/mash/node_angel.git"
+    "url"   : "git://github.com/mash/node-angel.git"
   },
   "author"          : "Masakazu Ohtsuka <o.masakazu@gmail.com> (http://maaash.jp/)",
   "contributors"    : [
