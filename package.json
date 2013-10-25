@@ -1,28 +1,38 @@
 {
-  "name"            : "angel",
-  "description"     : "superdaemon for hot-deploying net.Servers",
-  "keywords"        : ["graceful restart", "cluster", "signal", "fork", "max_requests_per_child"],
-  "version"         : "0.2.0",
-  "repository"      : {
-    "type"  : "git",
-    "url"   : "git://github.com/mash/node-angel.git"
-  },
-  "author"          : "Masakazu Ohtsuka <o.masakazu@gmail.com> (http://maaash.jp/)",
-  "contributors"    : [
+  "name": "angel",
+  "description": "superdaemon for hot-deploying net.Servers",
+  "keywords": [
+    "graceful restart",
+    "cluster",
+    "signal",
+    "fork",
+    "max_requests_per_child"
   ],
-  "main"            : "./angel.js",
-  "scripts"         : {
-    "test"  : "make test"
+  "version": "0.2.0",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/mash/node-angel.git"
   },
-  "engines"         : {
-    "node"  : "*"
+  "author": "Masakazu Ohtsuka <o.masakazu@gmail.com> (http://maaash.jp/)",
+  "contributors": [],
+  "main": "./angel.js",
+  "scripts": {
+    "test": "make test"
   },
-  "dependencies"    : {
+  "engines": {
+    "node": "*"
   },
-  "devDependencies" : {
-    "async"               : "*",
-    "grunt"               : "~0.4.1",
-    "grunt-release"       : "~0.3.5",
-    "grunt-contrib-clean" : "~0.4.1"
-  }
+  "dependencies": {},
+  "devDependencies": {
+    "async": "*",
+    "grunt": "~0.4.1",
+    "grunt-release": "~0.3.5",
+    "grunt-contrib-clean": "~0.4.1"
+  },
+  "readmeFilename": "README.markdown",
+  "gitHead": "694fd7227ee1556bef0e9b22e1d3fb05ad7a9599",
+  "directories": {
+    "test": "test"
+  },
+  "license": "MIT"
 }
