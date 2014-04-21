@@ -1,6 +1,6 @@
 var http = require('http');
 
-var server = http.Server(function(req, res) {
+var server = http.createServer(function(req, res) {
     res.writeHead(200);
     var tick = 0;
     setInterval( function() {
