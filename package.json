@@ -8,26 +8,32 @@
     "fork",
     "max_requests_per_child"
   ],
-  "version": "0.2.1",
+  "version": "0.3.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/mash/node-angel.git"
   },
   "author": "Masakazu Ohtsuka <o.masakazu@gmail.com> (http://maaash.jp/)",
   "contributors": [],
-  "main": "./angel.js",
+  "main": "./index.js",
+  "bin": {
+    "angel": "bin/angel"
+  },
   "scripts": {
     "test": "make test"
   },
   "engines": {
     "node": "*"
   },
-  "dependencies": {},
+  "dependencies": {
+    "minimist" : ">= 0.0",
+    "here"     : ">= 0.0"
+  },
   "devDependencies": {
-    "async": "*",
-    "grunt": "~0.4.1",
-    "grunt-release": "~0.3.5",
-    "grunt-contrib-clean": "~0.4.1"
+    "async"               : "*",
+    "grunt"               : "~0.4.1",
+    "grunt-release"       : "~0.3.5",
+    "grunt-contrib-clean" : "~0.4.1"
   },
   "readmeFilename": "README.markdown",
   "directories": {

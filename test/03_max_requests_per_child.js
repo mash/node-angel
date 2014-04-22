@@ -3,7 +3,7 @@ assert  = require('assert'),
 http    = require('http'),
 cluster = require('cluster'),
 async   = require('async'),
-angel   = require('../angel'),
+angel   = require('..'),
 app     = require('./_app.js');
 
 // this will be our test app's response body
@@ -42,7 +42,7 @@ function runTest (port) {
         });
     }
     async.series( jobs, function (err, results) {
-        assert( err === null, 'no errors' );
+        assert( ! err, 'no errors' );
 
         var worker_pids = {};
         results.forEach( function( result ) {
