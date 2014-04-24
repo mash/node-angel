@@ -23,7 +23,7 @@
     "test": "make test"
   },
   "engines": {
-    "node": "*"
+    "node": ">= 0.8"
   },
   "dependencies": {
     "minimist" : ">= 0.0",
