@@ -2,7 +2,6 @@ var fs     = require("fs")
 , path     = require("path")
 , cluster  = require("cluster")
 , numCPUs  = require("os").cpus().length
-, isNode06 = process.version.match( /v0\.6/ )
 ;
 
 function log() {
@@ -157,23 +156,13 @@ function startServer (server, options) {
             deletePIDFile( options.pidfile );
 
             eachWorkers( workers, function(worker) {
-                if ( isNode06 ) {
-                    worker.kill();
-                }
-                else {
-                    worker.destroy();
-                }
+                worker.destroy();
             });
         });
 
         log( "master will fork "+options.workers+" workers" );
 
-        cluster.on( "death", function (worker) {
-            // for v0.6
-            onWorkerDeath( worker, workers );
-        });
         cluster.on( "exit",  function (worker) {
-            // for v0.8
             onWorkerDeath( worker, workers );
         });
 

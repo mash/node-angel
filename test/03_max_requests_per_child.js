@@ -57,11 +57,6 @@ function runTest (port) {
     });
 }
 
-if ( process.version.match(/v0\.6/) ) {
-    // cheat, 0.6 doesn't have cluster.workers, so forget them
-    console.log( "Result: PASS" );
-    process.exit(0);
-}
 // worker tells master where the worker is listening on
 // master uses that port to request
 if ( cluster.isMaster ) {
