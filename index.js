@@ -80,9 +80,8 @@ function spawnWorker (options) {
     return new_worker;
 }
 function onWorkerDeath (worker, workers) {
-    if ( worker.is_rising ) {
-        // graceful restart killed worker
-        log( "worker[" + worker.pid + "] died" );
+    if ( worker.is_gracefully_dying ) {
+        log( "worker[" + worker.pid + "] died gracefully" );
     }
     else {
         if ( worker.overMaxRequests ) {
@@ -115,10 +114,19 @@ function startServer (server, options) {
             process.exit( 0 ); // run exit event listener
         });
         process.on( "SIGTERM", function() {
+            // graceful shutdown
             log( "SIGTERM" );
-            process.exit( 0 ); // run exit event listener
+
+            eachWorkers( workers, function(worker) {
+                worker.is_gracefully_dying = 1;
+                worker.send({ cmd: "close" });
+                worker.disconnect();
+            });
+            // cluster master to stop listening on TCP sockets
+            cluster.disconnect();
         });
         process.on( "SIGHUP", function() {
+            // graceful restart
             log( "SIGHUP" );
 
             var willrestart = true;
@@ -132,9 +140,10 @@ function startServer (server, options) {
                     var new_worker            = spawnWorker( options );
                     workers[ new_worker.pid ] = new_worker;
 
-                    worker.is_rising          = 1; // going to die gracefully
+                    worker.is_gracefully_dying = 1;
                     setTimeout( function() {
                         worker.send({ cmd: "close" });
+                        worker.disconnect();
                     }, options.interval * 1000 );
                 });
             }
@@ -177,7 +186,7 @@ function startServer (server, options) {
         log( "launched" );
 
         server.on( "close", function() {
-            log( "closes" );
+            log( "closed" );
             process.exit(0);
         });
         server.on( "request", function () {
@@ -185,8 +194,8 @@ function startServer (server, options) {
             if ( options.max_requests_per_child && (requestCount >= options.max_requests_per_child) ) {
                 process.send({ cmd: "set", key: "overMaxRequests", value: 1 });
                 if ( ! server.isClosed ) {
-                    server.close();
                     server.isClosed = 1;
+                    server.close();
                 }
             }
         });
@@ -215,6 +224,7 @@ function startServer (server, options) {
             switch (m.cmd) {
             case "close":
                 if (server.isListening) {
+                    log( "will close" );
                     server.close();
                 }
                 else {

@@ -6,7 +6,8 @@ angel.js is a simple library to gracefully restart multi process net.Servers
 
 ## Features
 
- * SIGHUP and graceful restart
+ * SIGHUP to graceful restart
+ * SIGTERM to graceful shutdown
  * refresh modules, and graceful restart only if refresh succeeds
  * fork a new worker on accidental death
  * max_requests_per_child
@@ -19,7 +20,7 @@ eg/app.js:
 ```javascript
 var http = require('http');
 
-var server = http.Server(function(req, res) {
+var server = http.createServer(function(req, res) {
     res.writeHead(200);
     var tick = 0;
     setInterval( function() {
