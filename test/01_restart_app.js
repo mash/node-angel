@@ -2,7 +2,7 @@ var fs  = require('fs'),
 assert  = require('assert'),
 http    = require('http'),
 cluster = require('cluster'),
-angel   = require('../angel'),
+angel   = require('..'),
 app     = require('./_app.js');
 
 // this will be our test app's response body

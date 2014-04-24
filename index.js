@@ -1,4 +1,5 @@
 var fs     = require("fs")
+, path     = require("path")
 , cluster  = require("cluster")
 , numCPUs  = require("os").cpus().length
 , isNode06 = process.version.match( /v0\.6/ )
@@ -228,6 +229,27 @@ function startServer (server, options) {
     }
 }
 
+function validate (options, app, callback) {
+    var ok = true, messages = [];
+    if ( (typeof(options.port) === "undefined") &&
+         (typeof(options.path) === "undefined") ) {
+        messages.push("Provide port or path");
+        ok = false;
+    }
+    else if ( (typeof(options.port) !== "undefined") &&
+              (typeof(options.port) !== "number") ) {
+        messages.push("Port is invalid: "+options.port);
+        ok = false;
+    }
+    try {
+        require( path.resolve(app) );
+    } catch (e) {
+        messages.push("Invalid app.js:" , e);
+        ok = false;
+    }
+    callback( ok, messages );
+}
+
 function angel (server, options_) {
     if ( (typeof options_.port === "undefined") &&
          (typeof options_.path === "undefined") ) {
@@ -249,5 +271,6 @@ function angel (server, options_) {
 
     startServer( server, options );
 }
+angel.validate = validate;
 
 module.exports = angel;

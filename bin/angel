@@ -1,0 +1,112 @@
+#!/usr/bin/env node
+
+var angel = require("../")
+,   path  = require("path")
+,   argv  = require("minimist")(process.argv.slice(2), {
+    "boolean": [ "h", "t" ]
+})
+,   here  = require("here").here
+;
+
+var usage = here(/*
+
+    \\\\\\ angel ///
+
+Usage:
+    angel [options] app.js
+
+Options:
+    --port port
+    -p port
+           Port number to listen on.
+           Either port or path is required.
+
+    --path path
+           Path of unix domain socket to listen on.
+           Either port or path is required.
+
+    --host host
+           Optional.
+           Host to listen on.
+
+    --workers number-of-workers
+           Optional. Defaults to number of CPUs.
+           Number of worker processes to fork.
+
+    --pidfile filename
+           Optional. Defaults to "angel.pid".
+           Filename for a file containing angel's master process pid.
+
+    --interval seconds
+           Optional. Defaults to 1 second.
+           Interval from when master was HUPed til old workers close.
+
+    --max-requests-per-child number-of-requests
+           Optional. Defaults to 0.
+           Worker processes max-requests-per-child number of requests and gracefully dies while master forks new worker.
+           0 means don't die = process requests forever.
+
+    --refresh-modules-regexp regexp
+           Optional. Defaults to none.
+           If set, master will reload node modules matching this regexp when received HUP signal.
+           Use this to refresh code without downtime.
+           When require-ing matching node modules fails, master won't restart processes.
+
+    --test
+    -t
+           Test options.
+           Exit code will be non 0 if something's wrong.
+
+    --help
+    -h
+           This.
+
+app.js
+           Your net.Server application.
+           Export net.Server instance, without listening.
+           angel does that for you.
+
+           var server = require("http").createServer( function(req, res) {
+               res.writeHead(200);
+               res.end("Hello, World!");
+           });
+           module.exports = server;
+*/).valueOf();
+
+var options = {}, app;
+var argv_to_options = {
+    "p"                      : "port", // shortcut
+    "port"                   : "port",
+    "path"                   : "path",
+    "host"                   : "host",
+    "workers"                : "workers",
+    "pidfile"                : "pidfile",
+    "interval"               : "interval",
+    "max-requests-per-child" : "max_requests_per_child",
+    "refresh-modules-regexp" : "refresh_modules_regexp"
+};
+Object.keys(argv_to_options).forEach( function(key) {
+    if (typeof(argv[key]) !== "undefined") {
+        options[ argv_to_options[key] ] = argv[ key ];
+    }
+});
+app = argv._[ 0 ];
+
+if (argv.t) {
+    console.log("Options: %j",options);
+    console.log("App:     %j",app);
+    angel.validate(options, app, function (ok, messages) { // sync
+        console.log(messages.join("\n"));
+        if (ok) {
+            console.log("Arguments looks fine");
+            process.exit(0);
+        }
+    });
+    process.exit(1);
+}
+if (argv.h || (argv._.length === 0)) {
+    console.log(usage);
+    process.exit(1);
+}
+
+angel( require(path.resolve(app)), options );

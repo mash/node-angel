@@ -1,4 +1,4 @@
-var angel = require('../angel')
+var angel = require('..')
 , app     = require('./app');
 
 // run
