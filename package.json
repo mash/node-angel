@@ -8,7 +8,7 @@
     "fork",
     "max_requests_per_child"
   ],
-  "version": "0.3.0",
+  "version": "1.0.0",
   "repository": {
     "type": "git",
     "url": "git://github.com/mash/node-angel.git"
@@ -26,14 +26,14 @@
     "node": ">= 0.8"
   },
   "dependencies": {
-    "minimist" : ">= 0.0",
-    "here"     : ">= 0.0"
+    "minimist": ">= 0.0",
+    "here": ">= 0.0"
   },
   "devDependencies": {
-    "async"               : "*",
-    "grunt"               : "~0.4",
-    "grunt-release"       : "~0.7",
-    "grunt-contrib-clean" : "~0.5"
+    "async": "*",
+    "grunt": "~0.4",
+    "grunt-release": "~0.7",
+    "grunt-contrib-clean": "~0.5"
   },
   "readmeFilename": "README.markdown",
   "directories": {
