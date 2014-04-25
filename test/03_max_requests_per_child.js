@@ -4,7 +4,8 @@ http    = require('http'),
 cluster = require('cluster'),
 async   = require('async'),
 angel   = require('..'),
-app     = require('./_app.js');
+app     = require('./_app.js'),
+test    = require('tap').test;
 
 // this will be our test app's response body
 var expected_body = process.env.NODE_ANGEL_TEST_MESSAGE = "Hello";
@@ -32,28 +33,35 @@ function sendRequest( port, callback ) {
 }
 
 function runTest (port) {
-    var jobs = []
-    , requests_count = 10;
-    while ( requests_count -- ) {
-        jobs.push( function(callback) {
-            sendRequest( port, function(body) {
-                callback( null, body );
+    test('max_requests_per_child', function (t) {
+        var jobs = []
+          , requests_count = 10;
+
+        t.plan(2);
+        t.on('end', function () {
+            process.kill( process.pid, 'SIGTERM' );
+        });
+
+        while ( requests_count -- ) {
+            jobs.push( function(callback) {
+                sendRequest( port, function(body) {
+                    callback( null, body );
+                });
             });
+        }
+        async.series( jobs, function (err, results) {
+            t.ok( ! err, 'no errors' );
+            
+            var worker_pids = {};
+            results.forEach( function( result ) {
+                worker_pids[ result.split(/:/).pop() ] = 1;
+            });
+            t.equal( Object.keys( worker_pids ).length, 5,
+                    '10 requests to 1 worker with 2 max_requests_per_child -> 5' );
+
+            t.end();
         });
-    }
-    async.series( jobs, function (err, results) {
-        assert( ! err, 'no errors' );
 
-        var worker_pids = {};
-        results.forEach( function( result ) {
-            worker_pids[ result.split(/:/).pop() ] = 1;
-        });
-        assert( Object.keys( worker_pids ).length === 5,
-                '10 requests to 1 worker with 2 max_requests_per_child -> 5' );
-
-        console.log( 'Result: PASS' );
-
-        process.exit(0);
     });
 }
 
