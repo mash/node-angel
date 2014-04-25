@@ -26,15 +26,15 @@
     "node": ">= 0.8"
   },
   "dependencies": {
-    "minimist": ">= 0.0",
-    "here": ">= 0.0"
+    "minimist": "~0",
+    "here": "~0"
   },
   "devDependencies": {
     "async": "*",
     "grunt": "~0.4",
     "grunt-release": "~0.7",
     "grunt-contrib-clean": "~0.5",
-    "tap": "=0"
+    "tap": "~0"
   },
   "readmeFilename": "README.markdown",
   "directories": {
