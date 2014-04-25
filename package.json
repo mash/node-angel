@@ -20,7 +20,7 @@
     "angel": "bin/angel"
   },
   "scripts": {
-    "test": "make test"
+    "test": "tap test/*.js"
   },
   "engines": {
     "node": ">= 0.8"
@@ -33,7 +33,8 @@
     "async": "*",
     "grunt": "~0.4",
     "grunt-release": "~0.7",
-    "grunt-contrib-clean": "~0.5"
+    "grunt-contrib-clean": "~0.5",
+    "tap": "=0"
   },
   "readmeFilename": "README.markdown",
   "directories": {
