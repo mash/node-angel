@@ -12,26 +12,16 @@ module.exports = function(grunt) {
       numberOfTests = 3;
 
     require('child_process').exec(
-      'make test',
+      'npm test',
       function(error, stdout, stderr) {
         grunt.log.verbose.writeln(stdout);
         grunt.log.verbose.writeln(stderr);
         if (error) {
           grunt.log.error(error);
           done(false);
+          return;
         }
-        else {
-          // detect "Result: PASS"
-          // of each tests
-          var passLines = stdout.match(/Result: PASS/g);
-          if ( ! passLines || (passLines.length != numberOfTests) ) {
-            grunt.fail.warn( "some tests failed, see log with -v flag" );
-            done(false);
-            return;
-          }
-          grunt.log.oklns( "All "+ numberOfTests +" tests successful." ).ok();
-          done(true);
-        }
+        done(true);
       }
     );
   });
