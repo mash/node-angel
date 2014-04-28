@@ -119,7 +119,6 @@ function startServer (server, options) {
             eachWorkers( workers, function(worker) {
                 worker.is_gracefully_dying = 1;
                 worker.send({ cmd: "close" });
-                worker.disconnect();
             });
             // cluster master to stop listening on TCP sockets
             cluster.disconnect();
