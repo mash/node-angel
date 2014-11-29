@@ -183,6 +183,8 @@ function startServer (server, options) {
                 process.send({ cmd: "set", key: "overMaxRequests", value: 1 });
                 if ( ! server.isClosed ) {
                     server.isClosed = 1;
+
+                    log( "will close - over max requests" );
                     server.close();
                 }
             }
@@ -212,7 +214,7 @@ function startServer (server, options) {
             switch (m.cmd) {
             case "close":
                 if (server.isListening) {
-                    log( "will close" );
+                    log( "will close - ordered by master" );
                     server.close();
                 }
                 else {
