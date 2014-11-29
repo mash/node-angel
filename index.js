@@ -84,7 +84,7 @@ function onWorkerDeath (worker, workers) {
     }
     else {
         if ( worker.overMaxRequests ) {
-            log( "worker[" + worker.pid + "] processed " + worker.angelOptions.max_requests_per_child + " requests and died successfully" );
+            log( "worker[" + worker.pid + "] processed " + worker.overMaxRequests + " requests and died successfully" );
         }
         else {
             // accidental death
@@ -95,12 +95,22 @@ function onWorkerDeath (worker, workers) {
     }
     delete workers[ worker.pid ];
 }
+function _calcMaxRequestsPerChild(options) {
+    if (options.max_requests_per_child) {
+        if (options.min_requests_per_child) {
+            return parseInt(options.min_requests_per_child + Math.random() * (options.max_requests_per_child - options.min_requests_per_child + 1), 10);
+        }
+        return options.max_requests_per_child;
+    }
+    return 0;
+}
 function startServer (server, options) {
     var workers      = {}
     ,   i            = 0
     ,   requestCount = 0
     ,   listenArgs   = []
     ,   new_worker
+    ,   max_requests_per_child = _calcMaxRequestsPerChild(options)
     ;
 
     if ( cluster.isMaster ) {
@@ -179,8 +189,8 @@ function startServer (server, options) {
         });
         server.on( "request", function () {
             requestCount += 1;
-            if ( options.max_requests_per_child && (requestCount >= options.max_requests_per_child) ) {
-                process.send({ cmd: "set", key: "overMaxRequests", value: 1 });
+            if ( max_requests_per_child && (requestCount >= max_requests_per_child) ) {
+                process.send({ cmd: "set", key: "overMaxRequests", value: max_requests_per_child });
                 if ( ! server.isClosed ) {
                     server.isClosed = 1;
 
@@ -261,7 +271,8 @@ function angel (server, options_) {
         pidfile                : "angel.pid",
         refresh_modules_regexp : false,
         interval               : 1,
-        max_requests_per_child : 0
+        max_requests_per_child : 0,
+        min_requests_per_child : 0
     };
 
     // merge options_ into default options

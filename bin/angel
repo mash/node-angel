@@ -46,6 +46,11 @@ Options:
            Worker processes max-requests-per-child number of requests and gracefully dies while master forks new worker.
            0 means don't die = process requests forever.
 
+    --min-requests-per-child number-of-requests
+           Optional. Defaults to 0.
+           Worker processes random number between min-requests-per-child and max-requests-per-child of requests and gracefully dies while master forks new worker.
+           0 means don't randomize; just use max-requests-per-child if set.
+
     --refresh-modules-regexp regexp
            Optional. Defaults to none.
            If set, master will reload node modules matching this regexp when received HUP signal.
@@ -83,6 +88,7 @@ var argv_to_options = {
     "pidfile"                : "pidfile",
     "interval"               : "interval",
     "max-requests-per-child" : "max_requests_per_child",
+    "min-requests-per-child" : "min_requests_per_child",
     "refresh-modules-regexp" : "refresh_modules_regexp"
 };
 Object.keys(argv_to_options).forEach( function(key) {
